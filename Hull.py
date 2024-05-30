@@ -34,20 +34,15 @@ def Hulls(data, period):
 
 def logic(data):
     hull = Hulls(data, 55)
-    print(hull)
     hul1 = hull[0] - hull[2]
     hul2 = hull[1] - hull[3]
     if ((hul1 >= 0) and (hul2 < 0)):
-        print("Buy")
-        return "Buy"
+        return "Buy", hull[0]
     elif ((hul1 < 0) and (hul2 >= 0)):
-        print("Sell")
-        return "Sell"
+        return "Sell", hull[0]
     elif(hul1 >= 0):
-        print("Bullish")
-        return
+        return None, hull[0]
     else:
-        print("Bearish")
-        return
+        return None, hull[0]
 
 
