@@ -23,7 +23,7 @@ class Binance:
             
     def get_klines(self, symbol, size):
         try:
-            data = self.session.futures_coin_klines(symbol=symbol, interval=Client.KLINE_INTERVAL_30MINUTE, limit=size)
+            data = self.session.futures_coin_klines(symbol=symbol, interval=Client.KLINE_INTERVAL_4HOUR, limit=size)
             closing_prices = [float(kline[4]) for kline in data]
             closing_prices.reverse()
             return closing_prices[1:]
@@ -40,7 +40,7 @@ class Binance:
         except BinanceAPIException as e:
             log_error(e)       
             
-    def get_buy_amount(self, symbol):
+    def get_buy_amount(self, symbol, hull):
         try:
             contract_info = self.session.futures_coin_exchange_info()
             contract_size = 0
@@ -49,14 +49,21 @@ class Binance:
                     contract_size = float(symbol_info['contractSize'])
                     break
             coin = symbol.split("USD")[0]
+            
             coin_balance = self.get_balance(coin)
+            print(coin_balance)
             data = self.session.futures_coin_klines(symbol=symbol, interval=Client.KLINE_INTERVAL_30MINUTE, limit=1)
             closing_price = float(data[0][4])
+            b3 = abs(((closing_price - hull) / closing_price) * 100)
             amount = (closing_price * coin_balance) / contract_size
-            amount = round(amount * float(leverage[symbol]))
+            lev = (100 / (9 * (b3 * 0.9206 + 1.4126)))
+            if (lev >= 10):
+                lev = 10
+            amount = round(amount * lev)
             return amount
         except BinanceAPIException as e:
             log_error(e)
+
             
     def make_trade_market(self, side, symbol, quant):
         try:
@@ -82,7 +89,4 @@ class Binance:
             return resp
         except BinanceAPIException as e:
             log_error(e)
-
-        
-                
-        
+ 
